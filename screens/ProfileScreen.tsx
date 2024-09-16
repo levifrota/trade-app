@@ -1,38 +1,62 @@
-import React, { useState } from 'react';
-import { View, TextInput, Button, Alert, StyleSheet } from 'react-native';
-import { signIn, signUp } from '../services/authService';
-import { fetchSignInMethodsForEmail } from 'firebase/auth';
-import { auth } from '../firebaseConfig';
-
-// Função para validar email usando regex
-const validateEmail = (email: string): boolean => {
-  const re = /\S+@\S+\.\S+/;
-  return re.test(email);
-};
+import React, { useState, useEffect } from 'react';
+import { View, TextInput, Button, Image, Alert, StyleSheet } from 'react-native';
+import { signUp, signIn, logOut } from '../services/authService';
+import { auth, db } from '../firebaseConfig';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import * as ImagePicker from 'expo-image-picker';
+import { fetchSignInMethodsForEmail, sendPasswordResetEmail } from 'firebase/auth';
 
 export default function ProfileScreen() {
-  const [email, setEmail] = useState('');
+  const [user, setUser] = useState(auth.currentUser);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState(user ? user.email : '');
+  const [photoUrl, setPhotoUrl] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(!!user);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      loadUserProfile();
+    }
+  }, [isLoggedIn]);
+
+  if (email === null) {
+    // Trate o caso onde email é null, talvez exiba uma mensagem de erro ou solicite que o usuário insira um email válido.
+    Alert.alert('Erro', 'O email não pode ser nulo.');
+    return;
+  }
+
+  const loadUserProfile = async () => {
+    if (user) {
+      const userProfileDoc = doc(db, 'users', user.uid);
+      const userProfile = await getDoc(userProfileDoc);
+
+      if (userProfile.exists()) {
+        const data = userProfile.data();
+        setName(data.name);
+        setEmail(data.email);
+        setPhotoUrl(data.photoUrl);
+      } else {
+        // Se não houver perfil, crie um perfil básico
+        await setDoc(userProfileDoc, {
+          name: user.displayName || '',
+          email: user.email,
+          photoUrl: user.photoURL || '',
+        });
+      }
+    }
+  };
 
   const handleSignUp = async () => {
-    // Valida se o email está no formato correto
-    if (!validateEmail(email)) {
-      Alert.alert('Email inválido', 'Por favor, insira um email válido.');
-      return;
-    }
-
-    // Valida se a senha tem o comprimento mínimo
-    if (password.length < 6) {
-      Alert.alert(
-        'Senha inválida',
-        'A senha deve ter pelo menos 6 caracteres.'
-      );
-      return;
-    }
-
     try {
-      const user = await signUp(email, password);
-      console.log('Usuário cadastrado: ', user);
+      const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+      if (signInMethods.length > 0) {
+        Alert.alert('Erro no cadastro', 'Este email já está cadastrado.');
+        return;
+      }
+      const newUser = await signUp(email, password);
+      setUser(newUser);
+      setIsLoggedIn(true);
     } catch (error:any) {
       if (Boolean(error.message.includes('email-already-in-use'))) {
         Alert.alert('Erro no cadastro', 'Email já cadastrado');
@@ -44,24 +68,76 @@ export default function ProfileScreen() {
 
   const handleSignIn = async () => {
     try {
-      // Verifica se o email está cadastrado
       const signInMethods = await fetchSignInMethodsForEmail(auth, email);
       if (signInMethods.length === 0) {
         Alert.alert('Erro no login', 'Este email não está cadastrado.');
         return;
       }
-
-      // Se o email estiver cadastrado, tenta autenticar
-      const user = await signIn(email, password);
-      console.log('Usuário autenticado: ', user);
-    } catch (error) {
+      const signedInUser = await signIn(email, password);
+      setUser(signedInUser);
+      setIsLoggedIn(true);
+    } catch (error:any) {
       console.error('Erro no login: ', error);
+      Alert.alert('Erro no login', error.message);
     }
   };
 
+  const handleLogout = async () => {
+    await logOut();
+    setIsLoggedIn(false);
+    setUser(null);
+    setName('');
+    setEmail('');
+    setPhotoUrl('');
+  };
+
+  const handleSaveProfile = async () => {
+    if (user) {
+      const userProfileDoc = doc(db, 'users', user.uid);
+      await setDoc(userProfileDoc, {
+        name,
+        email,
+        photoUrl,
+      }, { merge: true });
+      Alert.alert('Perfil atualizado', 'Suas informações foram salvas com sucesso.');
+    }
+  };
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+    if (!result.canceled) {
+      setPhotoUrl(result.assets[0].uri);
+    }
+  };
+
+  if (isLoggedIn) {
+    return (
+      <View>
+        <TextInput placeholder="Nome" value={name} onChangeText={setName} />
+        <TextInput placeholder="Email" value={email} onChangeText={setEmail} editable={false} />
+        {photoUrl ? <Image source={{ uri: photoUrl }} style={{ width: 100, height: 100 }} /> : null}
+        <Button title="Selecionar Foto" onPress={pickImage} />
+        <Button title="Salvar Perfil" onPress={handleSaveProfile} />
+        <Button title="Sair" onPress={handleLogout} />
+      </View>
+    );
+  }
+
   return (
     <View>
-      <TextInput placeholder='Email' value={email} onChangeText={setEmail} style={styles.textfield} />
+      <TextInput
+        placeholder='Email'
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize='none'
+        keyboardType='email-address'
+        style={styles.textfield}
+      />
       <TextInput
         placeholder='Senha'
         value={password}
@@ -71,6 +147,10 @@ export default function ProfileScreen() {
       />
       <Button title='Cadastrar' onPress={handleSignUp} />
       <Button title='Entrar' onPress={handleSignIn} />
+      <Button
+        title='Recuperar Senha'
+        onPress={() => handlePasswordReset(email)}
+      />
     </View>
   );
 }
@@ -80,3 +160,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   }
 });
+
+const handlePasswordReset = async (email: string | null) => {
+  // Supondo que 'email' possa ser 'null'
+  if (!email) {
+    Alert.alert(
+      'Erro',
+      'Por favor, insira um email válido para recuperação de senha.'
+    );
+    return;
+  }
+
+  try {
+    await sendPasswordResetEmail(auth, email);
+    Alert.alert(
+      'Recuperação de senha',
+      'Um email para redefinição de senha foi enviado.'
+    );
+  } catch (error:any) {
+    console.error('Erro ao enviar email de recuperação: ', error);
+    Alert.alert('Erro ao enviar email de recuperação', error.message);
+  }
+};
