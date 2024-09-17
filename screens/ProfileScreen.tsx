@@ -50,11 +50,7 @@ export default function ProfileScreen() {
 
   const loadProfileImage = () => {
     if (user) {
-      getProfileImage(user.uid, (photo: any) => {
-        if (photo) {
-          setPhotoUri(photo);
-        }
-      });
+      getProfileImage(user.uid);
     }
   };
 
@@ -113,6 +109,8 @@ export default function ProfileScreen() {
       }, { merge: true });
       saveProfileImage(user.uid, photoUri);
       Alert.alert('Perfil atualizado', 'Suas informações foram salvas com sucesso.');
+      console.log('save', saveProfileImage(user.uid, photoUri));
+      
     }
   };
 
@@ -189,8 +187,7 @@ const styles = StyleSheet.create({
   }
 });
 
-const handlePasswordReset = async (email: string | null) => {
-  // Supondo que 'email' possa ser 'null'
+const handlePasswordReset = async (email: string) => {
   if (!email) {
     Alert.alert(
       'Erro',

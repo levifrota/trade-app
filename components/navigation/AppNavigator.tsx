@@ -14,7 +14,7 @@ export default function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator initialRouteName='Home'>
         <Stack.Screen name='Home' component={HomeScreen} />
-        <Stack.Screen name='Profile' component={ProfileScreen} />
+        <Stack.Screen name='Perfil' component={ProfileScreen} />
         <Stack.Screen name='AddItem' component={AddItemScreen} />
         <Stack.Screen name='ItemList' component={ItemListScreen} />
         {/* <Stack.Screen name='ItemDetail' component={ItemDetailScreen} /> */}
