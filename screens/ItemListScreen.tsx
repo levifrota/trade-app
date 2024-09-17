@@ -1,36 +1,64 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList } from 'react-native';
-import { getItems } from '../services/itemService';
-
-interface Item {
-  id: number;
-  name: string;
-  category: string;
-  imageUri: string;
-}
+import { View, FlatList, ActivityIndicator, Text, StyleSheet } from 'react-native';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/firebaseConfig';
+import { ItemListComponent } from '@/components/ItemListComponent';
 
 export default function ItemListScreen() {
-  const [items, setItems] = useState<Item[]>([]); // Defina o tipo correto para o estado
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchItems = async () => {
-      const fetchedItems: Item[] = await getItems(); // Defina o tipo aqui também
-      setItems(fetchedItems);
-    };
-    fetchItems();
+    const unsubscribe = onSnapshot(
+      collection(db, 'users'),
+      (querySnapshot) => {
+        const userItems = querySnapshot.docs.flatMap(doc => {
+          const data = doc.data();
+          return data.items || [];
+        });
+
+        setItems(userItems);
+        setLoading(false);
+      },
+      (error) => {
+        setError('Erro ao carregar itens.');
+        console.error('Erro ao buscar itens: ', error);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
   }, []);
 
+  
+  if (loading) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
+  }
+
+  if (error) {
+    return <Text>{error}</Text>;
+  }
+
   return (
-    <View>
+    <View style={styles.container}>
       <FlatList
         data={items}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <Text>
-            {item.name} - {item.category}
-          </Text>
+          <ItemListComponent
+            name={item.name}
+            image={item.imageUri}
+            visibility={item.visibility}
+            category={item.category}
+          />
         )}
       />
     </View>
   );
 }
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor:"white",
+  },
+})
