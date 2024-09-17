@@ -5,18 +5,21 @@ import { auth, db } from '../firebaseConfig';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
 import { fetchSignInMethodsForEmail, sendPasswordResetEmail } from 'firebase/auth';
+import { createTable, saveProfileImage, getProfileImage } from '../db';
 
 export default function ProfileScreen() {
   const [user, setUser] = useState(auth.currentUser);
   const [name, setName] = useState('');
   const [email, setEmail] = useState(user ? user.email : '');
-  const [photoUrl, setPhotoUrl] = useState('');
+  const [photoUri, setPhotoUri] = useState('');
   const [password, setPassword] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(!!user);
 
   useEffect(() => {
+    createTable();
     if (isLoggedIn) {
       loadUserProfile();
+      loadProfileImage();
     }
   }, [isLoggedIn]);
 
@@ -35,15 +38,23 @@ export default function ProfileScreen() {
         const data = userProfile.data();
         setName(data.name);
         setEmail(data.email);
-        setPhotoUrl(data.photoUrl);
       } else {
         // Se não houver perfil, crie um perfil básico
         await setDoc(userProfileDoc, {
           name: user.displayName || '',
           email: user.email,
-          photoUrl: user.photoURL || '',
         });
       }
+    }
+  };
+
+  const loadProfileImage = () => {
+    if (user) {
+      getProfileImage(user.uid, (photo: any) => {
+        if (photo) {
+          setPhotoUri(photo);
+        }
+      });
     }
   };
 
@@ -58,6 +69,7 @@ export default function ProfileScreen() {
       setUser(newUser);
       setIsLoggedIn(true);
     } catch (error:any) {
+      console.error(error);
       if (Boolean(error.message.includes('email-already-in-use'))) {
         Alert.alert('Erro no cadastro', 'Email já cadastrado');
       } else {
@@ -68,15 +80,16 @@ export default function ProfileScreen() {
 
   const handleSignIn = async () => {
     try {
-      const signInMethods = await fetchSignInMethodsForEmail(auth, email);
-      if (signInMethods.length === 0) {
-        Alert.alert('Erro no login', 'Este email não está cadastrado.');
-        return;
-      }
+      // const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+      // if (signInMethods.length === 0) {
+      //   Alert.alert('Erro no login', 'Este email não está cadastrado.');
+      //   return;
+      // }
       const signedInUser = await signIn(email, password);
       setUser(signedInUser);
       setIsLoggedIn(true);
     } catch (error:any) {
+      console.error(error);
       console.error('Erro no login: ', error);
       Alert.alert('Erro no login', error.message);
     }
@@ -88,7 +101,7 @@ export default function ProfileScreen() {
     setUser(null);
     setName('');
     setEmail('');
-    setPhotoUrl('');
+    setPassword('');
   };
 
   const handleSaveProfile = async () => {
@@ -97,8 +110,8 @@ export default function ProfileScreen() {
       await setDoc(userProfileDoc, {
         name,
         email,
-        photoUrl,
       }, { merge: true });
+      saveProfileImage(user.uid, photoUri);
       Alert.alert('Perfil atualizado', 'Suas informações foram salvas com sucesso.');
     }
   };
@@ -111,19 +124,34 @@ export default function ProfileScreen() {
       quality: 1,
     });
     if (!result.canceled) {
-      setPhotoUrl(result.assets[0].uri);
+      setPhotoUri(result.assets[0].uri);
     }
   };
 
   if (isLoggedIn) {
     return (
       <View>
-        <TextInput placeholder="Nome" value={name} onChangeText={setName} />
-        <TextInput placeholder="Email" value={email} onChangeText={setEmail} editable={false} />
-        {photoUrl ? <Image source={{ uri: photoUrl }} style={{ width: 100, height: 100 }} /> : null}
-        <Button title="Selecionar Foto" onPress={pickImage} />
-        <Button title="Salvar Perfil" onPress={handleSaveProfile} />
-        <Button title="Sair" onPress={handleLogout} />
+        <TextInput
+          placeholder='Nome'
+          value={name}
+          onChangeText={setName}
+          style={styles.textfield}
+        />
+        <TextInput
+          placeholder='Email'
+          value={email}
+          onChangeText={setEmail}
+          editable={false}
+        />
+        {photoUri ? (
+          <Image
+            source={{ uri: photoUri }}
+            style={{ width: 100, height: 100 }}
+          />
+        ) : null}
+        <Button title='Selecionar Foto' onPress={pickImage} />
+        <Button title='Salvar Perfil' onPress={handleSaveProfile} />
+        <Button title='Sair' onPress={handleLogout} />
       </View>
     );
   }
