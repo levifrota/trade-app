@@ -1,33 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, Image, Alert, StyleSheet } from 'react-native';
+import { Alert } from 'react-native';
 import { signUp, signIn, logOut } from '../services/authService';
 import { auth, db } from '../firebaseConfig';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
-import { fetchSignInMethodsForEmail, sendPasswordResetEmail } from 'firebase/auth';
-import { createTable, saveProfileImage, getProfileImage } from '../db';
+import {
+  fetchSignInMethodsForEmail,
+  sendPasswordResetEmail,
+  deleteUser,
+} from 'firebase/auth';
+import { useAuth } from '../context/AuthContext';
+import { ProfileForm } from '../components/ProfileForm';
+import { AuthForm } from '../components/AuthForm';
 
 export default function ProfileScreen() {
   const [user, setUser] = useState(auth.currentUser);
   const [name, setName] = useState('');
   const [email, setEmail] = useState(user ? user.email : '');
-  const [photoUri, setPhotoUri] = useState('');
+  const [photoUrl, setPhotoUrl] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(!!user);
-
-  useEffect(() => {
-    createTable();
-    if (isLoggedIn) {
-      loadUserProfile();
-      loadProfileImage();
-    }
-  }, [isLoggedIn]);
+  const { isLoggedIn, setIsLoggedIn } = useAuth();
 
   if (email === null) {
-    // Trate o caso onde email é null, talvez exiba uma mensagem de erro ou solicite que o usuário insira um email válido.
-    Alert.alert('Erro', 'O email não pode ser nulo.');
     return;
   }
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      loadUserProfile();
+    }
+  }, [isLoggedIn]);
 
   const loadUserProfile = async () => {
     if (user) {
@@ -38,19 +40,14 @@ export default function ProfileScreen() {
         const data = userProfile.data();
         setName(data.name);
         setEmail(data.email);
+        setPhotoUrl(data.photoUrl);
       } else {
-        // Se não houver perfil, crie um perfil básico
         await setDoc(userProfileDoc, {
           name: user.displayName || '',
           email: user.email,
+          photoUrl: user.photoUrl || '',
         });
       }
-    }
-  };
-
-  const loadProfileImage = () => {
-    if (user) {
-      getProfileImage(user.uid);
     }
   };
 
@@ -64,9 +61,9 @@ export default function ProfileScreen() {
       const newUser = await signUp(email, password);
       setUser(newUser);
       setIsLoggedIn(true);
-    } catch (error:any) {
+    } catch (error: any) {
       console.error(error);
-      if (Boolean(error.message.includes('email-already-in-use'))) {
+      if (error.message.includes('email-already-in-use')) {
         Alert.alert('Erro no cadastro', 'Email já cadastrado');
       } else {
         Alert.alert('Erro no cadastro', error.message);
@@ -76,16 +73,10 @@ export default function ProfileScreen() {
 
   const handleSignIn = async () => {
     try {
-      // const signInMethods = await fetchSignInMethodsForEmail(auth, email);
-      // if (signInMethods.length === 0) {
-      //   Alert.alert('Erro no login', 'Este email não está cadastrado.');
-      //   return;
-      // }
       const signedInUser = await signIn(email, password);
       setUser(signedInUser);
       setIsLoggedIn(true);
-    } catch (error:any) {
-      console.error(error);
+    } catch (error: any) {
       console.error('Erro no login: ', error);
       Alert.alert('Erro no login', error.message);
     }
@@ -98,19 +89,25 @@ export default function ProfileScreen() {
     setName('');
     setEmail('');
     setPassword('');
+    setPhotoUrl('');
   };
 
   const handleSaveProfile = async () => {
     if (user) {
       const userProfileDoc = doc(db, 'users', user.uid);
-      await setDoc(userProfileDoc, {
-        name,
-        email,
-      }, { merge: true });
-      saveProfileImage(user.uid, photoUri);
-      Alert.alert('Perfil atualizado', 'Suas informações foram salvas com sucesso.');
-      console.log('save', saveProfileImage(user.uid, photoUri));
-      
+      await setDoc(
+        userProfileDoc,
+        {
+          name,
+          email,
+          photoUrl,
+        },
+        { merge: true }
+      );
+      Alert.alert(
+        'Perfil atualizado',
+        'Suas informações foram salvas com sucesso.'
+      );
     }
   };
 
@@ -122,70 +119,62 @@ export default function ProfileScreen() {
       quality: 1,
     });
     if (!result.canceled) {
-      setPhotoUri(result.assets[0].uri);
+      setPhotoUrl(result.assets[0].uri);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (user) {
+      try {
+        const userProfileDoc = doc(db, 'users', user.uid);
+        await deleteDoc(userProfileDoc);
+        await deleteUser(user);
+        Alert.alert('Conta deletada', 'Sua conta foi deletada com sucesso.');
+        setIsLoggedIn(false);
+        setUser(null);
+        setName('');
+        setEmail('');
+        setPassword('');
+        setPhotoUrl('');
+      } catch (error: any) {
+        console.error('Erro ao deletar conta: ', error);
+        Alert.alert(
+          'Erro',
+          'Ocorreu um erro ao deletar sua conta. Por favor, tente novamente.'
+        );
+      }
+    } else {
+      Alert.alert('Erro', 'Nenhum usuário autenticado para deletar.');
     }
   };
 
   if (isLoggedIn) {
     return (
-      <View>
-        <TextInput
-          placeholder='Nome'
-          value={name}
-          onChangeText={setName}
-          style={styles.textfield}
-        />
-        <TextInput
-          placeholder='Email'
-          value={email}
-          onChangeText={setEmail}
-          editable={false}
-        />
-        {photoUri ? (
-          <Image
-            source={{ uri: photoUri }}
-            style={{ width: 100, height: 100 }}
-          />
-        ) : null}
-        <Button title='Selecionar Foto' onPress={pickImage} />
-        <Button title='Salvar Perfil' onPress={handleSaveProfile} />
-        <Button title='Sair' onPress={handleLogout} />
-      </View>
+      <ProfileForm
+        name={name}
+        email={email}
+        photoUrl={photoUrl}
+        onNameChange={setName}
+        onPickImage={pickImage}
+        onSaveProfile={handleSaveProfile}
+        onLogout={handleLogout}
+        onDeleteAccount={handleDeleteAccount}
+      />
     );
   }
 
   return (
-    <View>
-      <TextInput
-        placeholder='Email'
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize='none'
-        keyboardType='email-address'
-        style={styles.textfield}
-      />
-      <TextInput
-        placeholder='Senha'
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        style={styles.textfield}
-      />
-      <Button title='Cadastrar' onPress={handleSignUp} />
-      <Button title='Entrar' onPress={handleSignIn} />
-      <Button
-        title='Recuperar Senha'
-        onPress={() => handlePasswordReset(email)}
-      />
-    </View>
+    <AuthForm
+      email={email}
+      password={password}
+      onEmailChange={setEmail}
+      onPasswordChange={setPassword}
+      onSignUp={handleSignUp}
+      onSignIn={handleSignIn}
+      onPasswordReset={() => handlePasswordReset(email)}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  textfield: {
-    backgroundColor: '#ffffff',
-  }
-});
 
 const handlePasswordReset = async (email: string) => {
   if (!email) {
@@ -202,7 +191,7 @@ const handlePasswordReset = async (email: string) => {
       'Recuperação de senha',
       'Um email para redefinição de senha foi enviado.'
     );
-  } catch (error:any) {
+  } catch (error: any) {
     console.error('Erro ao enviar email de recuperação: ', error);
     Alert.alert('Erro ao enviar email de recuperação', error.message);
   }

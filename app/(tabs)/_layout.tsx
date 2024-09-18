@@ -7,6 +7,7 @@ import ItemListScreen from '../../screens/ItemListScreen';
 import ProfileScreen from '../../screens/ProfileScreen';
 import { createTable } from '../../services/itemService';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
+import { AuthProvider } from '@/context/AuthContext';
 
 const Tab = createBottomTabNavigator();
 
@@ -16,6 +17,7 @@ export default function Layout() {
   }, []);
 
   return (
+    <AuthProvider>
       <Tab.Navigator
         initialRouteName='Home'
         screenOptions={({ route }) => ({
@@ -41,5 +43,6 @@ export default function Layout() {
         <Tab.Screen name='Adicionar item' component={AddItemScreen} />
         <Tab.Screen name='Lista de itens' component={ItemListScreen} />
       </Tab.Navigator>
+    </AuthProvider>
   );
 }
