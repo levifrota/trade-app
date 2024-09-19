@@ -1,25 +1,56 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, {
+  createContext,
+  useState,
+  useContext,
+  ReactNode,
+  useEffect,
+} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Defina a interface do contexto
 interface AuthContextType {
   isLoggedIn: boolean;
   setIsLoggedIn: (value: boolean) => void;
 }
 
-// Crie o contexto com valores padrão
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
+  useEffect(() => {
+    // Recuperar o estado de login do AsyncStorage ao iniciar o app
+    const loadLoginState = async () => {
+      try {
+        const storedLoginState = await AsyncStorage.getItem('isLoggedIn');
+        if (storedLoginState !== null) {
+          setIsLoggedIn(JSON.parse(storedLoginState));
+        }
+      } catch (error) {
+        console.error('Erro ao carregar o estado de login: ', error);
+      }
+    };
+    loadLoginState();
+  }, []);
+
+  const handleSetIsLoggedIn = async (value: boolean) => {
+    try {
+      setIsLoggedIn(value);
+      // Salvar o estado de login no AsyncStorage
+      await AsyncStorage.setItem('isLoggedIn', JSON.stringify(value));
+    } catch (error) {
+      console.error('Erro ao salvar o estado de login: ', error);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn }}>
+    <AuthContext.Provider
+      value={{ isLoggedIn, setIsLoggedIn: handleSetIsLoggedIn }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook personalizado para usar o AuthContext
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

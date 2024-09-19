@@ -5,13 +5,10 @@ import { auth, db } from '../firebaseConfig';
 import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
 import {
-  fetchSignInMethodsForEmail,
-  sendPasswordResetEmail,
   deleteUser,
 } from 'firebase/auth';
 import { useAuth } from '../context/AuthContext';
 import { ProfileForm } from '../components/ProfileForm';
-import { AuthForm } from '../components/AuthForm';
 
 export default function ProfileScreen() {
   const [user, setUser] = useState(auth.currentUser);
@@ -48,37 +45,6 @@ export default function ProfileScreen() {
           photoUrl: user.photoUrl || '',
         });
       }
-    }
-  };
-
-  const handleSignUp = async () => {
-    try {
-      const signInMethods = await fetchSignInMethodsForEmail(auth, email);
-      if (signInMethods.length > 0) {
-        Alert.alert('Erro no cadastro', 'Este email já está cadastrado.');
-        return;
-      }
-      const newUser = await signUp(email, password);
-      setUser(newUser);
-      setIsLoggedIn(true);
-    } catch (error: any) {
-      console.error(error);
-      if (error.message.includes('email-already-in-use')) {
-        Alert.alert('Erro no cadastro', 'Email já cadastrado');
-      } else {
-        Alert.alert('Erro no cadastro', error.message);
-      }
-    }
-  };
-
-  const handleSignIn = async () => {
-    try {
-      const signedInUser = await signIn(email, password);
-      setUser(signedInUser);
-      setIsLoggedIn(true);
-    } catch (error: any) {
-      console.error('Erro no login: ', error);
-      Alert.alert('Erro no login', error.message);
     }
   };
 
@@ -148,51 +114,16 @@ export default function ProfileScreen() {
     }
   };
 
-  if (isLoggedIn) {
-    return (
-      <ProfileForm
-        name={name}
-        email={email}
-        photoUrl={photoUrl}
-        onNameChange={setName}
-        onPickImage={pickImage}
-        onSaveProfile={handleSaveProfile}
-        onLogout={handleLogout}
-        onDeleteAccount={handleDeleteAccount}
-      />
-    );
-  }
-
   return (
-    <AuthForm
+    <ProfileForm
+      name={name}
       email={email}
-      password={password}
-      onEmailChange={setEmail}
-      onPasswordChange={setPassword}
-      onSignUp={handleSignUp}
-      onSignIn={handleSignIn}
-      onPasswordReset={() => handlePasswordReset(email)}
+      photoUrl={photoUrl}
+      onNameChange={setName}
+      onPickImage={pickImage}
+      onSaveProfile={handleSaveProfile}
+      onLogout={handleLogout}
+      onDeleteAccount={handleDeleteAccount}
     />
   );
-}
-
-const handlePasswordReset = async (email: string) => {
-  if (!email) {
-    Alert.alert(
-      'Erro',
-      'Por favor, insira um email válido para recuperação de senha.'
-    );
-    return;
-  }
-
-  try {
-    await sendPasswordResetEmail(auth, email);
-    Alert.alert(
-      'Recuperação de senha',
-      'Um email para redefinição de senha foi enviado.'
-    );
-  } catch (error: any) {
-    console.error('Erro ao enviar email de recuperação: ', error);
-    Alert.alert('Erro ao enviar email de recuperação', error.message);
-  }
 };

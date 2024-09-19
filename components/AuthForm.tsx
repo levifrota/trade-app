@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, TextInput, Button, StyleSheet } from 'react-native';
+import {
+  View,
+  TextInput,
+  Button,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
 
 interface AuthFormProps {
   email: string;
@@ -21,32 +28,80 @@ export const AuthForm: React.FC<AuthFormProps> = ({
   onPasswordReset,
 }) => {
   return (
-    <View>
+    <View style={styles.container}>
+      <Text style={styles.title}>Login</Text>
+
       <TextInput
-        placeholder='Email'
+        style={styles.input}
         value={email}
         onChangeText={onEmailChange}
-        autoCapitalize='none'
+        placeholder='Email'
         keyboardType='email-address'
-        style={styles.textfield}
       />
       <TextInput
-        placeholder='Senha'
+        style={styles.input}
         value={password}
         onChangeText={onPasswordChange}
+        placeholder='Senha'
         secureTextEntry
-        style={styles.textfield}
       />
-      <Button title='Cadastrar' onPress={onSignUp} />
-      <Button title='Entrar' onPress={onSignIn} />
-      <Button title='Recuperar Senha' onPress={onPasswordReset} />
+
+      <TouchableOpacity style={styles.button} onPress={onSignIn}>
+        <Text style={styles.buttonText}>Entrar</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.button} onPress={onSignUp}>
+        <Text style={styles.buttonText}>Cadastrar</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={onPasswordReset}>
+        <Text style={styles.forgotPassword}>Esqueci minha senha</Text>
+      </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  textfield: {
-    backgroundColor: '#ffffff',
-    marginVertical: 10,
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    backgroundColor: '#f2f2f2',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 24,
+    color: '#333',
+  },
+  input: {
+    height: 50,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    marginBottom: 16,
+    borderColor: '#ccc',
+    borderWidth: 1,
+  },
+  button: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 14,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  forgotPassword: {
+    color: '#4CAF50',
+    textAlign: 'center',
+    fontSize: 14,
+    marginTop: 16,
+    textDecorationLine: 'underline',
   },
 });
