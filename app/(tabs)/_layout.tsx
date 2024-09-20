@@ -9,6 +9,7 @@ import LoginScreen from '../../screens/LoginScreen';
 import { createTable } from '../../services/itemService';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import MyItemsScreen from '@/screens/MyItemsScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -39,7 +40,7 @@ function AuthenticatedLayout() {
               ? 'person'
               : route.name === 'Adicionar item'
               ? 'add-circle'
-              : route.name === 'Lista de itens'
+              : route.name === 'Meus itens'
               ? 'list'
               : 'home';
 
@@ -53,7 +54,7 @@ function AuthenticatedLayout() {
           <Tab.Screen name='Página inicial' component={HomeScreen} />
           <Tab.Screen name='Perfil' component={ProfileScreen} />
           <Tab.Screen name='Adicionar item' component={AddItemScreen} />
-          <Tab.Screen name='Lista de itens' component={ItemListScreen} />
+          <Tab.Screen name='Meus itens' component={MyItemsScreen} />
         </>
       ) : (
         <>

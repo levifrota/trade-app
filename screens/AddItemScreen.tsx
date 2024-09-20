@@ -18,6 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 import { uploadImage } from '@/services/storageService';
 import * as Location from 'expo-location';
 import { Linking } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 
 export default function AddItemScreen() {
   const [name, setName] = useState('');
@@ -84,7 +85,7 @@ export default function AddItemScreen() {
         setCategory('');
         setImageUri('');
         setVisibility(true);
-        navigation.navigate('Lista de itens');
+        navigation.navigate('Meus itens');
       } catch (error) {
         console.error('Erro ao adicionar item: ', error);
         Alert.alert('Erro', 'Ocorreu um erro ao salvar o item.');
@@ -123,12 +124,34 @@ export default function AddItemScreen() {
         onChangeText={setName}
         style={styles.input}
       />
-      <TextInput
-        placeholder='Categoria'
-        value={category}
-        onChangeText={setCategory}
-        style={styles.input}
-      />
+      <View style={styles.categoryStyle}>
+        <Text>Categoria: </Text>
+        <Picker
+          selectedValue={category}
+          style={{ height: 50, width: 250 }}
+          onValueChange={(itemValue) => setCategory(itemValue)}
+        >
+          <Picker.Item label="--- Categoria" value={null} />
+          <Picker.Item label="Casa e Decoração" value="Casa e Decoração" />
+          <Picker.Item label="Móveis" value="Móveis" />
+          <Picker.Item label="Eletro" value="Eletro" />
+          <Picker.Item label="Materiais de Construção" value="Materiais de Construção" />
+          <Picker.Item label="Informática" value="Informática" />
+          <Picker.Item label="Games" value="Games" />
+          <Picker.Item label="Tvs e Video" value="Tvs e Video" />
+          <Picker.Item label="Áudio" value="áudio" />
+          <Picker.Item label="Câmeras e Drones" value="Câmeras e Drones"/>
+          <Picker.Item label="Moda e Beleza" value="Moda e Beleza" />
+          <Picker.Item label="Escritório e Home Office" value="Escritório e Home Office" />
+          <Picker.Item label="Musica e Hobbies" value="Música e Hobbies" />
+          <Picker.Item label="Esportes e Fitness" value="Esportes e Fitness" />
+          <Picker.Item label="Artigos Infantis" value="Artigos Infantis" />
+          <Picker.Item label="Animais de Estimação" value="Animais de Estimação" />
+          <Picker.Item label="Agro e Indústria" value="Agro e Indútria" />
+          <Picker.Item label="Serviços" value="Serviços" />
+          <Picker.Item label="Vagas de Emprego" value="Vagas de Emprego" />
+        </Picker>
+      </View>
 
       <View style={styles.switchContainer}>
         <Text style={styles.switchLabel}>Visível</Text>
@@ -160,6 +183,14 @@ export default function AddItemScreen() {
 }
 
 const styles = StyleSheet.create({
+  categoryStyle:{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    flexDirection: "row",
+    borderBottomColor: "black",
+    borderBottomWidth: 1,
+  },
   container: {
     flex: 1,
     backgroundColor: '#f0f0f0',
