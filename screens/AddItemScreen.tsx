@@ -15,6 +15,7 @@ import { arrayUnion, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { uploadImage } from '@/services/storageService';
 
 
 export default function AddItemScreen() {
@@ -29,7 +30,7 @@ export default function AddItemScreen() {
   }, [navigation]);
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
@@ -62,14 +63,7 @@ export default function AddItemScreen() {
 
         let imageUrl = '';
         if (imageUri) {
-          // Enviar a imagem para o Firebase Storage
-          const storage = getStorage();
-          const response = await fetch(imageUri);
-          const blob = await response.blob();
-          const storageRef = ref(storage, `images/${Date.now()}-${userId}.jpg`);
-
-          await uploadBytes(storageRef, blob);
-          imageUrl = await getDownloadURL(storageRef); // Obter a URL de download
+          imageUrl = await uploadImage(imageUri, `item_${Date.now()}`);
         }
 
         // Atualizar o documento do usuário com o novo item
@@ -77,7 +71,7 @@ export default function AddItemScreen() {
           items: arrayUnion({
             name,
             category,
-            imageUrl, // Salva a URL da imagem no Firestore
+            imageUrl: imageUrl, // Salva a URL da imagem no Firestore
             visibility,
             createdAt: new Date(),
           }),
