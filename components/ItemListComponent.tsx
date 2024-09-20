@@ -2,14 +2,14 @@ import { View, Image, Text, StyleSheet } from 'react-native';
 
 interface ItemsProps {
   name: string;
-  image: string;
+  imageUrl: string;
   visibility: boolean;
   category: string;
 }
 
 export const ItemListComponent: React.FC<ItemsProps> = ({
   name,
-  image,
+  imageUrl,
   visibility,
   category,
 }) => {
@@ -19,13 +19,13 @@ export const ItemListComponent: React.FC<ItemsProps> = ({
 
   return (
     <View style={styles.itemContainer}>
-      {image === '' ? (
+      {imageUrl === '' ? (
         <Image
           source={require('../assets/images/no-image-icon.png')}
           style={styles.image}
         />
       ) : (
-        <Image source={{ uri: image }} style={styles.image} />
+        <Image source={{ uri: imageUrl }} style={styles.image} />
       )}
       <View style={styles.textContainer}>
         <Text style={styles.name}>{name}</Text>

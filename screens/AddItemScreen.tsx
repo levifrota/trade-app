@@ -14,6 +14,8 @@ import { getAuth } from 'firebase/auth';
 import { arrayUnion, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
 
 export default function AddItemScreen() {
   const [name, setName] = useState('');
@@ -58,11 +60,24 @@ export default function AddItemScreen() {
         const userId = user.uid;
         const userRef = doc(db, 'users', userId);
 
+        let imageUrl = '';
+        if (imageUri) {
+          // Enviar a imagem para o Firebase Storage
+          const storage = getStorage();
+          const response = await fetch(imageUri);
+          const blob = await response.blob();
+          const storageRef = ref(storage, `images/${Date.now()}-${userId}.jpg`);
+
+          await uploadBytes(storageRef, blob);
+          imageUrl = await getDownloadURL(storageRef); // Obter a URL de download
+        }
+
+        // Atualizar o documento do usuário com o novo item
         await updateDoc(userRef, {
           items: arrayUnion({
             name,
             category,
-            imageUri: imageUri || '',
+            imageUrl, // Salva a URL da imagem no Firestore
             visibility,
             createdAt: new Date(),
           }),
@@ -80,6 +95,7 @@ export default function AddItemScreen() {
       }
     }
   };
+
 
   return (
     <View style={styles.container}>

@@ -70,7 +70,7 @@ export default function ItemListScreen() {
         renderItem={({ item }) => (
           <ItemListComponent
             name={item.name}
-            image={item.imageUri}
+            imageUrl={item.imageUri}
             visibility={item.visibility}
             category={item.category}
           />
