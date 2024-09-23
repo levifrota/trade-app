@@ -12,7 +12,7 @@ import { useAuth } from '../context/AuthContext';
 import { AuthForm } from '../components/AuthForm';
 import { StyleSheet } from 'react-native';
 
-export default function ProfileScreen() {
+export default function LoginScreen() {
   const [user, setUser] = useState(auth.currentUser);
   const [email, setEmail] = useState(user ? user.email : '');
   const [password, setPassword] = useState('');

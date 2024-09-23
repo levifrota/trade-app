@@ -14,9 +14,7 @@ import { getAuth } from 'firebase/auth';
 import { arrayUnion, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { uploadImage } from '@/services/storageService';
-
 
 export default function AddItemScreen() {
   const [name, setName] = useState('');
@@ -74,6 +72,7 @@ export default function AddItemScreen() {
             imageUrl: imageUrl, // Salva a URL da imagem no Firestore
             visibility,
             createdAt: new Date(),
+            userEmail: user.email,
           }),
         });
 

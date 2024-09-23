@@ -9,6 +9,7 @@ import {
 } from 'firebase/auth';
 import { useAuth } from '../context/AuthContext';
 import { ProfileForm } from '../components/ProfileForm';
+import { uploadImage } from '@/services/storageService';
 
 export default function ProfileScreen() {
   const [user, setUser] = useState(auth.currentUser);
@@ -61,12 +62,17 @@ export default function ProfileScreen() {
   const handleSaveProfile = async () => {
     if (user) {
       const userProfileDoc = doc(db, 'users', user.uid);
+      let imageUrl = '';
+      if (photoUrl) {
+        imageUrl = await uploadImage(photoUrl, `user_${user.uid}`);
+      }
+
       await setDoc(
         userProfileDoc,
         {
           name,
           email,
-          photoUrl,
+          imageUrl: imageUrl,
         },
         { merge: true }
       );
