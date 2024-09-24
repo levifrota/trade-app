@@ -8,6 +8,7 @@ import {
   Text,
   StyleSheet,
   Switch,
+  ScrollView
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { getAuth } from 'firebase/auth';
@@ -115,86 +116,94 @@ export default function AddItemScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Adicionar Item</Text>
-      <TextInput
-        placeholder='Nome do item'
-        value={name}
-        onChangeText={setName}
-        style={styles.input}
-      />
-      <View style={styles.categoryStyle}>
-        <Text>Categoria: </Text>
-        <Picker
-          selectedValue={category}
-          style={{ height: 50, width: 250 }}
-          onValueChange={(itemValue) => setCategory(itemValue)}
-        >
-          <Picker.Item label="--- Categoria" value={null} />
-          <Picker.Item label="Casa e Decoração" value="Casa e Decoração" />
-          <Picker.Item label="Móveis" value="Móveis" />
-          <Picker.Item label="Eletro" value="Eletro" />
-          <Picker.Item label="Materiais de Construção" value="Materiais de Construção" />
-          <Picker.Item label="Informática" value="Informática" />
-          <Picker.Item label="Games" value="Games" />
-          <Picker.Item label="Tvs e Video" value="Tvs e Video" />
-          <Picker.Item label="Áudio" value="áudio" />
-          <Picker.Item label="Câmeras e Drones" value="Câmeras e Drones"/>
-          <Picker.Item label="Moda e Beleza" value="Moda e Beleza" />
-          <Picker.Item label="Escritório e Home Office" value="Escritório e Home Office" />
-          <Picker.Item label="Musica e Hobbies" value="Música e Hobbies" />
-          <Picker.Item label="Esportes e Fitness" value="Esportes e Fitness" />
-          <Picker.Item label="Artigos Infantis" value="Artigos Infantis" />
-          <Picker.Item label="Animais de Estimação" value="Animais de Estimação" />
-          <Picker.Item label="Agro e Indústria" value="Agro e Indútria" />
-          <Picker.Item label="Serviços" value="Serviços" />
-          <Picker.Item label="Vagas de Emprego" value="Vagas de Emprego" />
-        </Picker>
-      </View>
-
-      <View style={styles.switchContainer}>
-        <Text style={styles.switchLabel}>Visível</Text>
-        <Switch
-          value={visibility}
-          onValueChange={setVisibility}
-          trackColor={{ false: '#767577', true: '#4CAF50' }}
-          thumbColor={visibility ? '#ffffff' : '#f4f3f4'}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <Text style={styles.title}>Adicionar Item</Text>
+        <TextInput
+          placeholder='Nome do item'
+          value={name}
+          onChangeText={setName}
+          style={styles.input}
         />
-      </View>
+        <View style={styles.categoryStyle}>
+          <Text>Categoria: </Text>
+          <Picker
+            selectedValue={category}
+            style={{ height: 50, width: 250 }}
+            onValueChange={(itemValue) => setCategory(itemValue)}
+          >
+            <Picker.Item label="--- Categoria" value={null} />
+            <Picker.Item label="Casa e Decoração" value="Casa e Decoração" />
+            <Picker.Item label="Móveis" value="Móveis" />
+            <Picker.Item label="Eletro" value="Eletro" />
+            <Picker.Item label="Materiais de Construção" value="Materiais de Construção" />
+            <Picker.Item label="Informática" value="Informática" />
+            <Picker.Item label="Games" value="Games" />
+            <Picker.Item label="Tvs e Video" value="Tvs e Video" />
+            <Picker.Item label="Áudio" value="áudio" />
+            <Picker.Item label="Câmeras e Drones" value="Câmeras e Drones"/>
+            <Picker.Item label="Moda e Beleza" value="Moda e Beleza" />
+            <Picker.Item label="Escritório e Home Office" value="Escritório e Home Office" />
+            <Picker.Item label="Musica e Hobbies" value="Música e Hobbies" />
+            <Picker.Item label="Esportes e Fitness" value="Esportes e Fitness" />
+            <Picker.Item label="Artigos Infantis" value="Artigos Infantis" />
+            <Picker.Item label="Animais de Estimação" value="Animais de Estimação" />
+            <Picker.Item label="Agro e Indústria" value="Agro e Indútria" />
+            <Picker.Item label="Serviços" value="Serviços" />
+            <Picker.Item label="Vagas de Emprego" value="Vagas de Emprego" />
+          </Picker>
+        </View>
 
-      <TouchableOpacity style={styles.button} onPress={pickImage}>
-        <Text style={styles.buttonText}>Selecionar Imagem</Text>
-      </TouchableOpacity>
+        <View style={styles.switchContainer}>
+          <Text style={styles.switchLabel}>Visível</Text>
+          <Switch
+            value={visibility}
+            onValueChange={setVisibility}
+            trackColor={{ false: '#767577', true: '#4CAF50' }}
+            thumbColor={visibility ? '#ffffff' : '#f4f3f4'}
+          />
+        </View>
 
-      {imageUri ? (
-        <Image source={{ uri: imageUri }} style={styles.image} />
-      ) : null}
+        <TouchableOpacity style={styles.button} onPress={pickImage}>
+          <Text style={styles.buttonText}>Selecionar Imagem</Text>
+        </TouchableOpacity>
 
-      {/* Botão para capturar localização */}
-      <TouchableOpacity style={styles.button} onPress={getLocation}>
-        <Text style={styles.buttonText}>Capturar Localização</Text>
-      </TouchableOpacity>
+        {imageUri ? (
+          <Image source={{ uri: imageUri }} style={styles.image} />
+        ) : null}
 
-      <TouchableOpacity style={styles.button} onPress={handleAddItem}>
-        <Text style={styles.buttonText}>Salvar Item</Text>
-      </TouchableOpacity>
+        {/* Botão para capturar localização */}
+        <TouchableOpacity style={styles.button} onPress={getLocation}>
+          <Text style={styles.buttonText}>Capturar Localização</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.button} onPress={handleAddItem}>
+          <Text style={styles.buttonText}>Salvar Item</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  categoryStyle:{
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    flexDirection: "row",
-    borderBottomColor: "black",
+  categoryStyle: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexDirection: 'row',
+    borderBottomColor: 'black',
     borderBottomWidth: 1,
   },
   container: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
     justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
+    backgroundColor: '#f5f5f5',
+  },
+  scrollContainer: {
+    padding: 20,
+    flex: 1,
+    justifyContent: 'center',
   },
   title: {
     fontSize: 28,

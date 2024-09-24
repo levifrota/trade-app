@@ -10,8 +10,8 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { ProfileForm } from '../components/ProfileForm';
 import * as Location from 'expo-location';
-import { Linking } from 'react-native';
 import { uploadImage } from '@/services/storageService';
+import { useNavigation } from '@react-navigation/native';
 
 export default function ProfileScreen() {
   const [user, setUser] = useState(auth.currentUser);
@@ -21,10 +21,15 @@ export default function ProfileScreen() {
   const [password, setPassword] = useState('');
   const { isLoggedIn, setIsLoggedIn } = useAuth();
   const [userLocation, setUserLocation] = useState(null);
+  const navigation = useNavigation();
 
   if (email === null) {
     return;
   }
+
+  useEffect(() => {
+    navigation.setOptions({ headerShown: false });
+  }, [navigation]);
 
   useEffect(() => {
     if (isLoggedIn) {

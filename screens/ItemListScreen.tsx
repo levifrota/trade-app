@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   FlatList,
-  ActivityIndicator,
   Text,
   StyleSheet,
   TextInput,
@@ -61,12 +60,10 @@ export default function ItemListScreen() {
 
         setItems(otherUsersItems);
         setFilteredItems(otherUsersItems); // Inicialmente, todos os itens são exibidos
-        setLoading(false);
       },
       (error) => {
         setError('Erro ao carregar itens.');
         console.error('Erro ao buscar itens: ', error);
-        setLoading(false);
       }
     );
 
@@ -82,15 +79,6 @@ export default function ItemListScreen() {
     });
     setFilteredItems(filtered);
   }, [searchName, selectedCategory, items]); // Filtro é recalculado sempre que um desses estados mudar
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size='large' color='#4CAF50' />
-        <Text style={styles.loadingText}>Carregando itens...</Text>
-      </View>
-    );
-  }
 
   if (error) {
     return (
@@ -161,7 +149,7 @@ export default function ItemListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#f5f5f5',
     paddingTop: 60,
   },
   title: {
@@ -184,17 +172,6 @@ const styles = StyleSheet.create({
   listContent: {
     padding: 16,
     paddingBottom: 80,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#333',
   },
   errorContainer: {
     flex: 1,

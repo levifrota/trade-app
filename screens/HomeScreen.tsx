@@ -1,5 +1,11 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import ItemListScreen from './ItemListScreen';
@@ -7,13 +13,37 @@ import ItemListScreen from './ItemListScreen';
 export default function HomeScreen() {
   const navigation = useNavigation();
   const { isLoggedIn } = useAuth();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
+  
+  useEffect(() => {
+    let timeoutId: any;
+
+    if (loading) {
+      timeoutId = setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+
+      return () => clearTimeout(timeoutId);
+    }
+
+    return () => clearTimeout(timeoutId);
+  }, [loading]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size='large' color='#4CAF50' />
+        <Text style={styles.loadingText}>Carregando...</Text>
+      </View>
+    );
+  }
 
   return (
-    <View style={isLoggedIn?styles.containerLogged:styles.container}>
+    <View style={isLoggedIn ? styles.containerLogged : styles.container}>
       {isLoggedIn ? (
         <>
           <ItemListScreen/>
@@ -65,5 +95,16 @@ const styles = StyleSheet.create({
     fontSize: 16, // Tamanho de fonte legível
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#333',
   },
 });

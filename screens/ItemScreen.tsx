@@ -305,7 +305,7 @@ export default function ItemScreen() {
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
-        <AntDesign name='arrowleft' size={30} color='black' />
+        <AntDesign name='leftcircleo' size={30} color='black' />
       </TouchableOpacity>
 
       <Text style={styles.title}>Detalhes do Item</Text>
@@ -392,7 +392,6 @@ const styles = StyleSheet.create({
     top: 50,
     left: 20,
     padding: 10,
-    borderRadius: 5,
   },
   title: {
     fontSize: 28,
