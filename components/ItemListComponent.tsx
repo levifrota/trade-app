@@ -1,10 +1,11 @@
-import { View, Image, Text, StyleSheet } from 'react-native';
-
+import { useNavigation } from '@react-navigation/native';
+import { View, Image, Text, StyleSheet, TouchableOpacity } from 'react-native';
 interface ItemsProps {
   name: string;
   imageUrl: string;
   visibility: boolean;
   category: string;
+  userEmail: string;
 }
 
 export const ItemListComponent: React.FC<ItemsProps> = ({
@@ -12,14 +13,27 @@ export const ItemListComponent: React.FC<ItemsProps> = ({
   imageUrl,
   visibility,
   category,
+  userEmail
 }) => {
   if (!visibility) {
     return null;
   }
 
+  const navigation = useNavigation();
+
   return (
-    <View style={styles.itemContainer}>
-      {imageUrl === '' ? (
+    <TouchableOpacity
+      style={styles.itemContainer}
+      onPress={() =>
+        navigation.navigate('ItemDetails', {
+          name: name,
+          category: category,
+          imageUrl: imageUrl,
+          userEmail: userEmail,
+        })
+      }
+    >
+      {imageUrl === '' || imageUrl === undefined ? (
         <Image
           source={require('../assets/images/no-image-icon.png')}
           style={styles.image}
@@ -31,7 +45,7 @@ export const ItemListComponent: React.FC<ItemsProps> = ({
         <Text style={styles.name}>{name}</Text>
         <Text style={styles.category}>{category}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import ItemListScreen from './ItemListScreen';
@@ -11,9 +11,6 @@ export default function HomeScreen() {
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
-
-  console.log('logged?', isLoggedIn);
-  
 
   return (
     <View style={isLoggedIn?styles.containerLogged:styles.container}>
