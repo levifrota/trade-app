@@ -1,5 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import { View, Image, Text, StyleSheet, TouchableOpacity } from 'react-native';
+
 interface ItemsProps {
   name: string;
   imageUrl: string;
@@ -7,6 +8,8 @@ interface ItemsProps {
   category: string;
   userEmail: string;
   itemId: string;
+  latitude?: number; // Latitude do item (opcional)
+  longitude?: number; // Longitude do item (opcional)
 }
 
 export const ItemListComponent: React.FC<ItemsProps> = ({
@@ -16,12 +19,14 @@ export const ItemListComponent: React.FC<ItemsProps> = ({
   category,
   userEmail,
   itemId,
+  latitude, // Latitude do item
+  longitude, // Longitude do item
 }) => {
+  const navigation = useNavigation();
+
   if (!visibility) {
     return null;
   }
-
-  const navigation = useNavigation();
 
   return (
     <TouchableOpacity
@@ -33,6 +38,8 @@ export const ItemListComponent: React.FC<ItemsProps> = ({
           imageUrl: imageUrl,
           userEmail: userEmail,
           itemId: itemId,
+          latitude: latitude,
+          longitude: longitude,
         })
       }
     >

@@ -8,8 +8,8 @@ import LoginScreen from '../../screens/LoginScreen';
 import { createTable } from '../../services/itemService';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
-import ItemScreen from '../../screens/ItemScreen';
 import MyItemsScreen from '@/screens/MyItemsScreen';
+import ItemScreen from '../../screens/ItemScreen';  // ItemDetails screen
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();

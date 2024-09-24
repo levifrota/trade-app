@@ -59,9 +59,9 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
         editable={false}
         style={[styles.textField, styles.disabledField]}
       />
-  	  <TouchableOpacity style={styles.button} onPress={onButtonLocation}>
+  	  {/* <TouchableOpacity style={styles.button} onPress={onButtonLocation}>
         <Text style={styles.buttonText}>Adicionar/Atualizar Localização</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       <TouchableOpacity style={styles.button} onPress={onSaveProfile}>
         <Text style={styles.buttonText}>Salvar Perfil</Text>

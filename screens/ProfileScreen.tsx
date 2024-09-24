@@ -10,7 +10,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { ProfileForm } from '../components/ProfileForm';
 import * as Location from 'expo-location';
-
+import { Linking } from 'react-native';
 import { uploadImage } from '@/services/storageService';
 
 export default function ProfileScreen() {
@@ -77,6 +77,9 @@ export default function ProfileScreen() {
         {
           name,
           email,
+          photoUrl,
+          userLocation,
+          imageUrl: imageUrl,
           photoUrl,
         },
         { merge: true }
