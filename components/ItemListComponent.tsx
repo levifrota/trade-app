@@ -6,6 +6,7 @@ interface ItemsProps {
   visibility: boolean;
   category: string;
   userEmail: string;
+  itemId: string;
 }
 
 export const ItemListComponent: React.FC<ItemsProps> = ({
@@ -13,7 +14,8 @@ export const ItemListComponent: React.FC<ItemsProps> = ({
   imageUrl,
   visibility,
   category,
-  userEmail
+  userEmail,
+  itemId,
 }) => {
   if (!visibility) {
     return null;
@@ -30,6 +32,7 @@ export const ItemListComponent: React.FC<ItemsProps> = ({
           category: category,
           imageUrl: imageUrl,
           userEmail: userEmail,
+          itemId: itemId,
         })
       }
     >

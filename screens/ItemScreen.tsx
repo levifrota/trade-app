@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Image,
@@ -7,9 +7,13 @@ import {
   TouchableOpacity,
   Linking,
   Alert,
+  Switch,
 } from 'react-native';
-import { useRoute, RouteProp, useNavigation } from '@react-navigation/native'; // useNavigation adicionado
+import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import AntDesign from '@expo/vector-icons/AntDesign';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
+import { getAuth } from 'firebase/auth';
 
 type ItemScreenRouteProp = RouteProp<
   {
@@ -18,16 +22,28 @@ type ItemScreenRouteProp = RouteProp<
       imageUrl: string;
       category: string;
       userEmail: string;
+      items: Array<any>;
+      itemId: string;
+      visibility: boolean;
     };
   },
   'params'
 >;
 
 export default function ItemScreen() {
-  const route = useRoute<ItemScreenRouteProp>(); // Use useRoute para capturar os parâmetros
-  const navigation = useNavigation(); // Hook para navegação
+  const route = useRoute<ItemScreenRouteProp>();
+  const navigation = useNavigation();
 
-  const { name, imageUrl, category, userEmail } = route.params;
+  const {
+    name,
+    imageUrl,
+    category,
+    userEmail,
+    itemId,
+    visibility: initialVisibility,
+  } = route.params;
+
+  const [visibility, setVisibility] = useState(initialVisibility);
 
   const handleEmailPress = () => {
     const emailUrl = `mailto:${userEmail}`;
@@ -43,14 +59,108 @@ export default function ItemScreen() {
   };
 
   const handleGoBack = () => {
-    navigation.navigate('Lista de itens'); // Navega para a tela de ItemListScreen
+    navigation.goBack();
+  };
+
+  const toggleVisibility = async (newVisibility: boolean) => {
+   try {
+     const auth = getAuth();
+     const user = auth.currentUser;
+
+     if (!user) {
+       Alert.alert('Erro', 'Nenhum usuário logado.');
+       return;
+     }
+
+     const userId = user.uid;
+     const userRef = doc(db, 'users', userId);
+
+     // Buscar o documento do usuário
+     const userDoc = await getDoc(userRef);
+     const userData = userDoc.data();
+
+     if (!userData || !userData.items) {
+       Alert.alert('Erro', 'Nenhum item encontrado para este usuário.');
+       return;
+     }
+
+     // Atualizar o item correto dentro do array
+     const updatedItems = userData.items.map((item: any) =>
+       item.id === itemId ? { ...item, visibility: newVisibility } : item
+     );
+
+     // Atualizar o documento com a nova visibilidade
+     await updateDoc(userRef, {
+       items: updatedItems,
+     });
+
+     // Atualiza o estado local
+     setVisibility(newVisibility);
+
+     Alert.alert('Sucesso', 'A visibilidade foi atualizada.');
+   } catch (error) {
+     console.error('Erro ao atualizar a visibilidade: ', error);
+     Alert.alert('Erro', 'Ocorreu um erro ao atualizar a visibilidade.');
+   }
+ };
+
+  const handleDeleteItem = async () => {
+    Alert.alert(
+      'Confirmação',
+      `Tem certeza que deseja apagar o item: ${name}?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Sim',
+          onPress: async () => {
+            try {
+              const auth = getAuth();
+              const user = auth.currentUser;
+
+              if (!user) {
+                Alert.alert('Erro', 'Nenhum usuário logado.');
+                return;
+              }
+
+              const userId = user.uid;
+              const userRef = doc(db, 'users', userId);
+
+              const userDoc = await getDoc(userRef);
+              const userData = userDoc.data();
+
+              if (!userData || !userData.items) {
+                Alert.alert(
+                  'Erro',
+                  'Nenhum item encontrado para este usuário.'
+                );
+                return;
+              }
+
+              const updatedItems = userData.items.filter(
+                (item: any) => item.id !== itemId
+              );
+
+              await updateDoc(userRef, {
+                items: updatedItems,
+              });
+
+              Alert.alert('Sucesso', 'O item foi apagado com sucesso.');
+              navigation.goBack();
+            } catch (error) {
+              console.error('Erro ao apagar item: ', error);
+              Alert.alert('Erro', 'Ocorreu um erro ao apagar o item.');
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   return (
     <View style={styles.container}>
-      {/* Botão de Voltar */}
       <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
-        <AntDesign name='leftcircle' size={24} color='black' />
+        <AntDesign name='arrowleft' size={30} color='black' />
       </TouchableOpacity>
 
       <Text style={styles.title}>Detalhes do Item</Text>
@@ -71,9 +181,30 @@ export default function ItemScreen() {
         <Text style={styles.label}>Categoria:</Text>
         <Text style={styles.value}>{category}</Text>
 
-        <Text style={styles.label}>Adicionado por:</Text>
-        <TouchableOpacity onPress={handleEmailPress}>
-          <Text style={[styles.value, styles.email]}>{userEmail}</Text>
+        {userEmail ? (
+          <>
+            <Text style={styles.label}>Adicionado por:</Text>
+            <TouchableOpacity onPress={handleEmailPress}>
+              <Text style={[styles.value, styles.email]}>{userEmail}</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <View style={styles.switchContainer}>
+            <Text style={styles.label}>Visibilidade:</Text>
+            <Switch
+              value={visibility}
+              onValueChange={toggleVisibility}
+              trackColor={{ false: '#767577', true: '#4CAF50' }}
+              thumbColor={visibility ? '#ffffff' : '#f4f3f4'}
+            />
+          </View>
+        )}
+
+        <TouchableOpacity
+          onPress={handleDeleteItem}
+          style={styles.deleteButton}
+        >
+          <Text style={styles.deleteButtonText}>Apagar Item</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -108,6 +239,12 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 20,
   },
+  switchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
   detailsContainer: {
     backgroundColor: '#fff',
     padding: 20,
@@ -132,5 +269,17 @@ const styles = StyleSheet.create({
   email: {
     color: '#4CAF50',
     textDecorationLine: 'underline',
+  },
+  deleteButton: {
+    marginTop: 20,
+    backgroundColor: '#ff3333',
+    padding: 10,
+    borderRadius: 8,
+  },
+  deleteButtonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });

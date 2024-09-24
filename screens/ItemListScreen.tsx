@@ -74,6 +74,7 @@ export default function ItemListScreen() {
             visibility={item.visibility}
             category={item.category}
             userEmail={item.userEmail}
+            itemId={item.id}
           />
         )}
         contentContainerStyle={styles.listContent}

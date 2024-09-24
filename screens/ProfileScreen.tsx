@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
-import { signUp, signIn, logOut } from '../services/authService';
+import { logOut } from '../services/authService';
 import { auth, db } from '../firebaseConfig';
 import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
@@ -10,7 +10,6 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { ProfileForm } from '../components/ProfileForm';
 import * as Location from 'expo-location';
-import { Linking } from 'react-native';
 
 import { uploadImage } from '@/services/storageService';
 

@@ -3,7 +3,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from '../../screens/HomeScreen';
 import AddItemScreen from '../../screens/AddItemScreen';
-import ItemListScreen from '../../screens/ItemListScreen';
 import ProfileScreen from '../../screens/ProfileScreen';
 import LoginScreen from '../../screens/LoginScreen';
 import { createTable } from '../../services/itemService';
@@ -12,7 +11,6 @@ import { AuthProvider, useAuth } from '@/context/AuthContext';
 import ItemScreen from '../../screens/ItemScreen';
 import MyItemsScreen from '@/screens/MyItemsScreen';
 
-// Criando o Tab Navigator
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
@@ -29,8 +27,6 @@ export default function Layout() {
 }
 
 function AuthenticatedStack() {
-  const { isLoggedIn } = useAuth();
-
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MainTabs" component={AuthenticatedLayout} />
@@ -39,7 +35,6 @@ function AuthenticatedStack() {
   );
 }
 
-// Definindo o Tab Navigator
 function AuthenticatedLayout() {
   const { isLoggedIn } = useAuth();
 

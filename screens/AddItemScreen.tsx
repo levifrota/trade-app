@@ -8,7 +8,6 @@ import {
   Text,
   StyleSheet,
   Switch,
-  Button,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { getAuth } from 'firebase/auth';
@@ -16,8 +15,6 @@ import { arrayUnion, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
 import { uploadImage } from '@/services/storageService';
-import * as Location from 'expo-location';
-import { Linking } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
 export default function AddItemScreen() {
@@ -26,7 +23,6 @@ export default function AddItemScreen() {
   const [imageUri, setImageUri] = useState('');
   const [visibility, setVisibility] = useState(true);
   const navigation = useNavigation();
-  const [userLocation, setUserLocation] = useState(null);
 
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -69,12 +65,14 @@ export default function AddItemScreen() {
           imageUrl = await uploadImage(imageUri, `item_${Date.now()}`);
         }
 
-        // Atualizar o documento do usuário com o novo item
+        const newItemId = `${Date.now()}_${Math.floor(Math.random() * 1000)}`; // Gera um UUID único para o item
+
         await updateDoc(userRef, {
           items: arrayUnion({
+            id: newItemId,
             name,
             category,
-            imageUrl: imageUrl, // Salva a URL da imagem no Firestore
+            imageUrl: imageUrl,
             visibility,
             createdAt: new Date(),
             userEmail: user.email,
@@ -175,11 +173,11 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontSize: 28, // Maior para dar destaque ao título
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#333', // Cor escura para contraste
-    marginBottom: 40, // Espaço maior abaixo do título
-    textAlign: 'center', // Centraliza o texto
+    color: '#333',
+    marginBottom: 40,
+    textAlign: 'center',
   },
   input: {
     backgroundColor: '#fff',

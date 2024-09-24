@@ -1,10 +1,12 @@
-import { View, Image, Text, StyleSheet, Switch } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { View, Image, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
 interface ItemsProps {
   name: string;
   imageUrl: string;
   visibility: boolean;
   category: string;
+  itemId: string;
 }
 
 export const UserListComponent: React.FC<ItemsProps> = ({
@@ -12,10 +14,27 @@ export const UserListComponent: React.FC<ItemsProps> = ({
   imageUrl,
   visibility,
   category,
+  itemId,
 }) => {
+  const navigation = useNavigation();
 
   return (
-    <View style={visibility?styles.itemContainerVisibilityTrue:styles.itemContainerVisivilityFalse}>
+    <TouchableOpacity
+      style={
+        visibility
+          ? styles.itemContainerVisibilityTrue
+          : styles.itemContainerVisivilityFalse
+      }
+      onPress={() =>
+        navigation.navigate('ItemDetails', {
+          name: name,
+          category: category,
+          imageUrl: imageUrl,
+          itemId: itemId,
+          visibility: visibility,
+        })
+      }
+    >
       {imageUrl === '' ? (
         <Image
           source={require('../assets/images/no-image-icon.png')}
@@ -29,9 +48,9 @@ export const UserListComponent: React.FC<ItemsProps> = ({
         <Text style={styles.category}>{category}</Text>
       </View>
       <View>
-        <Text>Visibilidade: {visibility?"Publica":"Privada"}</Text>
+        <Text>Visibilidade: {visibility ? 'Pública' : 'Privada'}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

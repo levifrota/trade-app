@@ -19,7 +19,6 @@ export default function MyItemsScreen () {
   }, [navigation]);
 
   useEffect(() => {
-    // Obter o usuário atual
     const auth = getAuth();
     const user = auth.currentUser;
 
@@ -31,10 +30,8 @@ export default function MyItemsScreen () {
 
     const userId = user.uid;
 
-    // Referência ao documento do usuário no Firestore
     const userRef = doc(db, 'users', userId);
 
-    // Observar as alterações em tempo real dos itens do usuário
     const unsubscribe = onSnapshot(
       userRef,
       (doc) => {
@@ -66,11 +63,12 @@ export default function MyItemsScreen () {
             imageUrl={item.imageUrl}
             visibility={item.visibility}
             category={item.category}
+            itemId={item.id}
           />
         )}
       />
     </View>
-  )
+  );
 };
 
 const styles = StyleSheet.create({
