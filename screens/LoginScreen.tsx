@@ -94,8 +94,6 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.screen}>
-      <Text style={styles.title}>Bem-vindo ao TradeApp!</Text>
-
       <AuthForm
         email={email}
         password={password}

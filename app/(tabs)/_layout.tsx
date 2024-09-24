@@ -9,11 +9,11 @@ import LoginScreen from '../../screens/LoginScreen';
 import { createTable } from '../../services/itemService';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
-import ItemScreen from '../../screens/ItemScreen';  // ItemDetails screen
+import ItemScreen from '../../screens/ItemScreen';
+import MyItemsScreen from '@/screens/MyItemsScreen';
 
 // Criando o Tab Navigator
 const Tab = createBottomTabNavigator();
-// Criando o Stack Navigator para gerenciar o ItemDetails
 const Stack = createNativeStackNavigator();
 
 export default function Layout() {
@@ -23,22 +23,17 @@ export default function Layout() {
 
   return (
     <AuthProvider>
-      {/* Remova o NavigationContainer daqui */}
       <AuthenticatedStack />
     </AuthProvider>
   );
 }
 
-// Definindo o Stack Navigator com as abas e ItemDetails fora do Tab Navigator
 function AuthenticatedStack() {
   const { isLoggedIn } = useAuth();
 
   return (
-    // NavigationContainer apenas aqui, ao redor do Stack
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {/* O Tab Navigator será a rota inicial */}
       <Stack.Screen name="MainTabs" component={AuthenticatedLayout} />
-      {/* ItemDetails está aqui fora das abas */}
       <Stack.Screen name="ItemDetails" component={ItemScreen} />
     </Stack.Navigator>
   );
@@ -60,7 +55,7 @@ function AuthenticatedLayout() {
               ? 'person'
               : route.name === 'Adicionar item'
               ? 'add-circle'
-              : route.name === 'Lista de itens'
+              : route.name === 'Meus itens'
               ? 'list'
               : 'home';
 
@@ -74,7 +69,7 @@ function AuthenticatedLayout() {
           <Tab.Screen name='Página inicial' component={HomeScreen} />
           <Tab.Screen name='Perfil' component={ProfileScreen} />
           <Tab.Screen name='Adicionar item' component={AddItemScreen} />
-          <Tab.Screen name='Lista de itens' component={ItemListScreen} />
+          <Tab.Screen name='Meus itens' component={MyItemsScreen} />
         </>
       ) : (
         <>

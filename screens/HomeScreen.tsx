@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
+import ItemListScreen from './ItemListScreen';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -12,19 +13,14 @@ export default function HomeScreen() {
   }, [navigation]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Bem-vindo ao TradeApp!</Text>
+    <View style={isLoggedIn?styles.containerLogged:styles.container}>
       {isLoggedIn ? (
         <>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => navigation.navigate('Lista de itens')}
-          >
-            <Text style={styles.buttonText}>Ver Itens</Text>
-          </TouchableOpacity>
+          <ItemListScreen/>
         </>
       ) : (
         <>
+          <Text style={styles.title}>Bem-vindo ao TradeApp!</Text>
           <TouchableOpacity
             style={styles.button}
             onPress={() => navigation.navigate('Login')}
@@ -38,6 +34,11 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  containerLogged: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    padding: 0,
+  },
   container: {
     flex: 1,
     justifyContent: 'center', // Centraliza verticalmente
