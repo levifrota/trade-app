@@ -9,13 +9,9 @@ import {
 } from 'firebase/auth';
 import { useAuth } from '../context/AuthContext';
 import { ProfileForm } from '../components/ProfileForm';
-<<<<<<< HEAD
 import * as Location from 'expo-location';
 import { Linking } from 'react-native';
-
-=======
 import { uploadImage } from '@/services/storageService';
->>>>>>> 757ffd66c7d5b2cfaa05bf474caf2d33a6487d7c
 
 export default function ProfileScreen() {
   const [user, setUser] = useState(auth.currentUser);
@@ -81,12 +77,10 @@ export default function ProfileScreen() {
         {
           name,
           email,
-<<<<<<< HEAD
           photoUrl,
           userLocation,
-=======
           imageUrl: imageUrl,
->>>>>>> 757ffd66c7d5b2cfaa05bf474caf2d33a6487d7c
+          photoUrl,
         },
         { merge: true }
       );

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Image,
@@ -8,8 +8,11 @@ import {
   Linking,
   Alert,
 } from 'react-native';
-import { useRoute, RouteProp, useNavigation } from '@react-navigation/native'; // useNavigation adicionado
+import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import AntDesign from '@expo/vector-icons/AntDesign';
+import { doc, updateDoc, arrayUnion, getDoc, arrayRemove } from 'firebase/firestore';
+import { auth, db } from '@/firebaseConfig';
+import * as Location from 'expo-location';
 
 type ItemScreenRouteProp = RouteProp<
   {
@@ -18,16 +21,93 @@ type ItemScreenRouteProp = RouteProp<
       imageUrl: string;
       category: string;
       userEmail: string;
+      latitude: number; // Latitude do item
+      longitude: number; // Longitude do item
     };
   },
   'params'
 >;
 
 export default function ItemScreen() {
-  const route = useRoute<ItemScreenRouteProp>(); // Use useRoute para capturar os parâmetros
-  const navigation = useNavigation(); // Hook para navegação
+  const [isSaved, setIsSaved] = useState(false); // Verificar se o item está salvo
+  const [loading, setLoading] = useState(true); // Estado de carregamento
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null); // Localização do usuário
+  const [distance, setDistance] = useState<string | null>(null); // Distância calculada
+  const [userLoaded, setUserLoaded] = useState(false); // Indica quando as informações do Firestore estão prontas
 
-  const { name, imageUrl, category, userEmail } = route.params;
+  const route = useRoute<ItemScreenRouteProp>();
+  const navigation = useNavigation();
+
+  const { name, imageUrl, category, userEmail, latitude, longitude } = route.params; // Recebendo as coordenadas
+
+  // Função para calcular a distância entre dois pontos (fórmula de Haversine)
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // Raio da Terra em km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Retorna a distância em km
+  };
+
+  const deg2rad = (deg: number) => {
+    return deg * (Math.PI / 180);
+  };
+
+  // Função para carregar a localização do usuário e verificar se o item já está salvo
+  const loadUserDataAndLocation = async () => {
+    try {
+      // Carregar localização do usuário
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Erro', 'Permissão para acessar localização foi negada.');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      setUserLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      // Verificar se o item já está salvo na lista de interesses
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const userRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userRef);
+
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        const interestList = data.interestList || [];
+
+        // Verifica se o item já está salvo na lista de interesses
+        const itemExists = interestList.some((item: any) => item.name === name);
+        setIsSaved(itemExists);
+      }
+
+      setUserLoaded(true); // Marcar que as informações do usuário estão carregadas
+    } catch (error) {
+      console.error('Erro ao carregar localização ou dados do usuário:', error);
+    } finally {
+      setLoading(false); // Concluir carregamento
+    }
+  };
+
+  useEffect(() => {
+    loadUserDataAndLocation(); // Carregar dados do usuário e localização ao montar o componente
+  }, []);
+
+  // Calcular a distância apenas quando a localização do usuário e os dados do Firestore estiverem carregados
+  useEffect(() => {
+    if (userLocation && userLoaded) {
+      const dist = calculateDistance(userLocation.latitude, userLocation.longitude, latitude, longitude);
+      setDistance(dist.toFixed(2)); // Armazena a distância com 2 casas decimais
+    }
+  }, [userLocation, userLoaded]);
 
   const handleEmailPress = () => {
     const emailUrl = `mailto:${userEmail}`;
@@ -43,8 +123,58 @@ export default function ItemScreen() {
   };
 
   const handleGoBack = () => {
-    navigation.navigate('Lista de itens'); // Navega para a tela de ItemListScreen
+    navigation.navigate('Página inicial');
   };
+
+  const handleToggleInterestList = async () => {
+    const user = auth.currentUser;
+
+    if (!user) {
+      Alert.alert('Erro', 'Você precisa estar logado para salvar itens.');
+      return;
+    }
+
+    try {
+      const userRef = doc(db, 'users', user.uid);
+
+      if (isSaved) {
+        // Remove o item da lista de interesses se ele já estiver salvo
+        await updateDoc(userRef, {
+          interestList: arrayRemove({
+            name,
+            imageUrl,
+            category,
+            userEmail,
+          }),
+        });
+        setIsSaved(false);
+        Alert.alert('Item removido', 'Item removido da sua lista de interesses.');
+      } else {
+        // Adiciona o item na lista de interesses se não estiver salvo
+        await updateDoc(userRef, {
+          interestList: arrayUnion({
+            name,
+            imageUrl,
+            category,
+            userEmail,
+          }),
+        });
+        setIsSaved(true);
+        Alert.alert('Item salvo', 'Item adicionado à sua lista de interesses.');
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar a lista de interesses:', error);
+      Alert.alert('Erro', 'Ocorreu um erro ao salvar o item. Por favor, tente novamente.');
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Carregando...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -74,6 +204,26 @@ export default function ItemScreen() {
         <Text style={styles.label}>Adicionado por:</Text>
         <TouchableOpacity onPress={handleEmailPress}>
           <Text style={[styles.value, styles.email]}>{userEmail}</Text>
+        </TouchableOpacity>
+
+        {/* Exibir a distância, se disponível */}
+        {distance && !isNaN(Number(distance)) ? (
+          <>
+            <Text style={styles.label}>Distância:</Text>
+            <Text style={styles.value}>{distance} km</Text>
+          </>
+        ) : (
+          <Text style={styles.value}>Distância não disponível</Text>
+        )}
+
+        {/* Botão para salvar/remover da lista de interesses */}
+        <TouchableOpacity
+          style={[styles.saveItem, isSaved ? styles.itemSaved : styles.itemNotSaved]}
+          onPress={handleToggleInterestList}
+        >
+          <Text style={styles.labelButton}>
+            {isSaved ? 'Remover da lista de interesses' : 'Salvar na lista de interesses'}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -132,5 +282,30 @@ const styles = StyleSheet.create({
   email: {
     color: '#4CAF50',
     textDecorationLine: 'underline',
+  },
+  saveItem: {
+    width: '100%',
+    height: 40,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  itemSaved: {
+    backgroundColor: 'green',
+  },
+  itemNotSaved: {
+    backgroundColor: 'red',
+  },
+  labelButton: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

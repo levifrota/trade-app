@@ -16,12 +16,8 @@ import { arrayUnion, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
 import { uploadImage } from '@/services/storageService';
-<<<<<<< HEAD
-import * as Location from 'expo-location';
-import { Linking } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-=======
->>>>>>> 757ffd66c7d5b2cfaa05bf474caf2d33a6487d7c
+import * as Location from 'expo-location';
 
 export default function AddItemScreen() {
   const [name, setName] = useState('');
@@ -29,11 +25,25 @@ export default function AddItemScreen() {
   const [imageUri, setImageUri] = useState('');
   const [visibility, setVisibility] = useState(true);
   const navigation = useNavigation();
-  const [userLocation, setUserLocation] = useState(null);
+  const [latitude, setLatitude] = useState(null); // Inicialize como null
+  const [longitude, setLongitude] = useState(null); // Inicialize como null
 
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
+
+  const getLocation = async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissão para acessar a localização negada');
+      return;
+    }
+
+    let location = await Location.getCurrentPositionAsync({});
+    setLatitude(location.coords.latitude);
+    setLongitude(location.coords.longitude);
+    Alert.alert('Localização capturada', `Lat: ${location.coords.latitude}, Long: ${location.coords.longitude}`);
+  };
 
   const pickImage = async () => {
     const result = await ImagePicker.launchCameraAsync({
@@ -49,11 +59,14 @@ export default function AddItemScreen() {
   };
 
   const handleAddItem = async () => {
+    // Verifique se a localização já foi coletada
+    if (latitude === null || longitude === null) {
+      Alert.alert('Erro', 'A localização ainda não foi obtida. Por favor, tente novamente.');
+      return;
+    }
+
     if (category === '' || name === '') {
-      Alert.alert(
-        'Erro! Campo(s) em branco',
-        'Preencha os campos corretamente'
-      );
+      Alert.alert('Erro! Campo(s) em branco', 'Preencha os campos corretamente');
     } else {
       try {
         const auth = getAuth();
@@ -81,6 +94,8 @@ export default function AddItemScreen() {
             visibility,
             createdAt: new Date(),
             userEmail: user.email,
+            latitude: latitude,  // Agora usa o valor correto
+            longitude: longitude, // Agora usa o valor correto
           }),
         });
 
@@ -89,7 +104,7 @@ export default function AddItemScreen() {
         setCategory('');
         setImageUri('');
         setVisibility(true);
-        navigation.navigate('Meus itens');
+        // navigation.navigate('Meus itens');
       } catch (error) {
         console.error('Erro ao adicionar item: ', error);
         Alert.alert('Erro', 'Ocorreu um erro ao salvar o item.');
@@ -99,9 +114,7 @@ export default function AddItemScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        Adicionar Item
-      </Text>
+      <Text style={styles.title}>Adicionar Item</Text>
       <TextInput
         placeholder='Nome do item'
         value={name}
@@ -154,6 +167,11 @@ export default function AddItemScreen() {
       {imageUri ? (
         <Image source={{ uri: imageUri }} style={styles.image} />
       ) : null}
+
+      {/* Botão para capturar localização */}
+      <TouchableOpacity style={styles.button} onPress={getLocation}>
+        <Text style={styles.buttonText}>Capturar Localização</Text>
+      </TouchableOpacity>
 
       <TouchableOpacity style={styles.button} onPress={handleAddItem}>
         <Text style={styles.buttonText}>Salvar Item</Text>
