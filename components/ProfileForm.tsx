@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   TextInput,
@@ -17,6 +17,7 @@ interface ProfileFormProps {
   onSaveProfile: () => void;
   onLogout: () => void;
   onDeleteAccount: () => void;
+  onButtonLocation: () => void;
 }
 
 export const ProfileForm: React.FC<ProfileFormProps> = ({
@@ -28,6 +29,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
   onSaveProfile,
   onLogout,
   onDeleteAccount,
+  onButtonLocation
 }) => {
   return (
     <View style={styles.container}>
@@ -57,6 +59,9 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
         editable={false}
         style={[styles.textField, styles.disabledField]}
       />
+  	  <TouchableOpacity style={styles.button} onPress={onButtonLocation}>
+        <Text style={styles.buttonText}>Adicionar/Atualizar Localização</Text>
+      </TouchableOpacity>
 
       <TouchableOpacity style={styles.button} onPress={onSaveProfile}>
         <Text style={styles.buttonText}>Salvar Perfil</Text>

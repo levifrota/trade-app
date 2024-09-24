@@ -93,26 +93,6 @@ export default function AddItemScreen() {
     }
   };
 
-  const openGoogleMaps = (latitude:any, longitude:any) => {
-    const url = `https://www.google.com/maps?q=${latitude},${longitude}`;
-    Linking.openURL(url);
-  };
-  
-  const getLocation = async () => {
-    // Solicita permissão para acessar a localização
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permissão para acessar a localização negada');
-      return;
-    }
-
-    // Obtém a localização atual
-    let location = await Location.getCurrentPositionAsync({});
-    setUserLocation(location);
-    Alert.alert('Localização capturada', `Lat: ${location.coords.latitude}, Long: ${location.coords.longitude}`);
-    openGoogleMaps(location.coords.latitude, location.coords.longitude);
-  };
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>
@@ -174,10 +154,6 @@ export default function AddItemScreen() {
       <TouchableOpacity style={styles.button} onPress={handleAddItem}>
         <Text style={styles.buttonText}>Salvar Item</Text>
       </TouchableOpacity>
-      <Button
-        title = "localizaçao"
-        onPress={getLocation}
-      />
     </View>
   );
 }
